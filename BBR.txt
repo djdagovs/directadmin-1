@@ -1,0 +1,46 @@
+先把/etc/sysctl.conf 文件中 关于 net.ipv4.tcp_congestion_control的配置注释掉。
+
+http://elrepo.org/people/ajb/devel/kernel-ml/el7/x86_64/RPMS/
+
+wget http://mirrors.kernel.org/debian/pool/main/l/linux/linux-image-4.9.0-rc8-amd64-unsigned_4.9~rc8-1~exp1_amd64.deb
+ar x linux-image-4.9.0-rc8-amd64-unsigned_4.9~rc8-1~exp1_amd64.deb
+tar -Jxf data.tar.xz
+install -m644 boot/vmlinuz-4.9.0-rc8-amd64 /boot/vmlinuz-4.9.0-rc8-amd64
+cp -Rav lib/modules/4.9.0-rc8-amd64 /lib/modules/
+depmod -a 4.9.0-rc8-amd64
+dracut -f -v --hostonly -k '/lib/modules/4.9.0-rc8-amd64'  /boot/initramfs-4.9.0-rc8-amd64.img 4.9.0-rc8-amd64
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+#开启bbr
+echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+
+#调整内核启动顺序
+grub2-set-default "CentOS Linux (4.9.0-rc8-amd64) 7 (Core)"
+grub2-editenv list
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+来源ELREPO
+安装方法：rpm -ivh 地址
+地址
+EL6(Centos6/RedHat6) : http://elrepo.org/people/ajb/devel/kernel-ml/el6/x86_64/RPMS/kernel-ml-4.9.0-0.rc8.el6.elrepo.x86_64.rpm
+EL7(Centos7/RedHat7) : http://elrepo.org/people/ajb/devel/kernel-ml/el7/x86_64/RPMS/kernel-ml-4.9.0-0.rc8.el7.elrepo.x86_64.rpm
+PS.还有一些devel headers的包啥的你们看心情吧，我为了稳定点是全装了，需要注意的是有些和原依赖有冲突
+请使用rpm -qa|grep kernel获取包全名，
+使用rpm -e 包全名 --nodeps 进行强制删除
+然后rpm -ivh 地址 进行安装
+
+
+另外部分机器重启后不会使用新内核，请修改/etc/grub.conf，查看default=，0为下方第一个内核，一般是最新的（也就是我们安装的）
+
+
+
+wget https://www.gincheng.com/wp-content/uploads/2016/12/kernel-ml-4.9.0-0.rc8_.el7_.elrepo.x86_64.rpm
+yum localinstall -y kernel-ml-4.9.0-0.rc8_.el7_.elrepo.x86_64.rpm
+grub2-set-default  ‘CentOS Linux (4.9.0-0.rc8.el7.elrepo.x86_64) 7 (Core)’
+reboot
+echo “net.core.default_qdisc=fq” >> /etc/sysctl.conf
+echo “net.ipv4.tcp_congestion_control=bbr” >> /etc/sysctl.conf
+sysctl -p
+sysctl net.ipv4.tcp_available_congestion_control
+出现net.ipv4.tcp_available_congestion_control = bbr cubic reno 安装完成
