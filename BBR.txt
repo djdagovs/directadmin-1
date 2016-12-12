@@ -1,3 +1,58 @@
+
+#1
+
+1：首先yum update -y更新到最新CentOS 7.3 1611
+cat /etc/redhat-release
+CentOS Linux release 7.3.1611 (Core)
+
+2: 安装elrepo内核
+rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm
+修改让elrepo yum update时可用
+vim /etc/yum.repos.d/elrepo.repo
+[elrepo-kernel]
+name=ELRepo.org Community Enterprise Linux Kernel Repository - el7
+baseurl=http://elrepo.org/linux/kernel/el7/$basearch/
+        http://mirrors.coreix.net/elrepo/kernel/el7/$basearch/
+        http://jur-linux.org/download/elrepo/kernel/el7/$basearch/
+        http://repos.lax-noc.com/elrepo/kernel/el7/$basearch/
+        http://mirror.ventraip.net.au/elrepo/kernel/el7/$basearch/
+mirrorlist=http://mirrors.elrepo.org/mirrors-elrepo-kernel.el7
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-elrepo.org
+
+把enabled=0改成enabled=1
+然后保存之后yum update -y，就会更新到elrepo正式版4.9内核
+
+3：跟着vim /etc/sysctl.conf
+加两行：
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+
+sysctl -p生效，就ok了。
+
+这样是肯定不会挂的。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#2
+
+
 先把/etc/sysctl.conf 文件中 关于 net.ipv4.tcp_congestion_control的配置注释掉。
 
 http://elrepo.org/people/ajb/devel/kernel-ml/el7/x86_64/RPMS/
